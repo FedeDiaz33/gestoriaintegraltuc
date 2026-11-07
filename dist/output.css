@@ -1399,9 +1399,8 @@ video {
     color: rgb(11 31 69/var(--tw-text-opacity, 1))
 }
 
-.text-secondary {
-    --tw-text-opacity: 1;
-    color: rgb(193 142 47/var(--tw-text-opacity, 1))
+.text-secondary{
+    color: rgb(240, 182, 36);
 }
 
 .text-sky-500 {
