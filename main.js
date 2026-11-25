@@ -9,6 +9,25 @@ const WHATSAPP_NUMBER = "543814963423";
 const waLink = (msg) =>
   `https://wa.me/${WHATSAPP_NUMBER}${msg ? "?text=" + encodeURIComponent(msg) : ""}`;
 
+/* ---- Helpers de seguridad (HTML seguro) ----
+   Todo dato interpolado en una plantilla que termina en innerHTML pasa por esc().
+   Hoy los datos son constantes de este archivo; esto protege el día que vengan de
+   un JSON, un CMS, la URL o una API. Las URLs externas pasan por safeUrl(). */
+const ESC_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;" };
+const esc = (v) => String(v ?? "").replace(/[&<>"'`]/g, (c) => ESC_MAP[c]);
+const safeUrl = (u) => {
+  if (u === "#") return "#";
+  try {
+    const x = new URL(String(u), window.location.origin);
+    return x.protocol === "https:" ? x.href : "#";
+  } catch {
+    return "#";
+  }
+};
+// Lectura de claves controladas por el usuario sin tocar la cadena de prototipos
+const own = (obj, key, fallback) =>
+  Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : fallback;
+
 /* ============ 1b. TARIFAS DEL COTIZADOR (editá acá los valores monetarios) ============ */
 function initCotizador() {
   // 1. Configuración de tarifas y opciones
@@ -67,6 +86,8 @@ function initCotizador() {
   const toggleBtns = document.querySelectorAll(".cotizador-toggle-btn");
   if (!cotServicio || !cotZona || !cotKm) return;
 
+  const MAX_KM = 1000; // tope: evita Infinity/NaN y cotizaciones absurdas
+
   // 3. Estado interno
   let modoDistancia = "zona"; // 'zona' o 'km'
   let urgenciaSeleccionada = "normal";
@@ -83,25 +104,25 @@ function initCotizador() {
   function initSelects() {
     // Servicios
     cotServicio.innerHTML = Object.entries(CONFIG.servicios)
-      .map(([key, item]) => `<option value="${key}">${item.label}</option>`)
+      .map(([key, item]) => `<option value="${esc(key)}">${esc(item.label)}</option>`)
       .join("");
 
     // Zonas
     cotZona.innerHTML = Object.entries(CONFIG.zonas)
-      .map(([key, item]) => `<option value="${key}">${item.label}</option>`)
+      .map(([key, item]) => `<option value="${esc(key)}">${esc(item.label)}</option>`)
       .join("");
 
     // Opciones de Espera
     cotEspera.innerHTML = CONFIG.opcionesEspera
       .map((min) => {
-        const label = min === 0 ? "Sin espera" : `${min} minutos`;
-        return `<option value="${min}">${label}</option>`;
+        const label = min === 0 ? "Sin espera" : `${esc(min)} minutos`;
+        return `<option value="${esc(min)}">${esc(label)}</option>`;
       })
       .join("");
 
     // Adicionales
     cotAdicional.innerHTML = Object.entries(CONFIG.adicionales)
-      .map(([key, item]) => `<option value="${key}">${item.label}</option>`)
+      .map(([key, item]) => `<option value="${esc(key)}">${esc(item.label)}</option>`)
       .join("");
 
     // Urgencia (Botones interactivos)
@@ -109,11 +130,11 @@ function initCotizador() {
       .map(([key, item]) => {
         const isActive = key === urgenciaSeleccionada ? "is-active" : "";
         return `
-          <button type="button" data-urgencia="${key}" class="cotizador-urgencia-btn ${isActive} flex items-center gap-3 text-left w-full">
+          <button type="button" data-urgencia="${esc(key)}" class="cotizador-urgencia-btn ${isActive} flex items-center gap-3 text-left w-full">
             <span class="cotizador-urgencia-icon w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0">
-              <i class="fa-solid ${item.icon}"></i>
+              <i class="fa-solid ${esc(item.icon)}"></i>
             </span>
-            <span class="text-xs sm:text-sm font-semibold text-gray-700">${item.label}</span>
+            <span class="text-xs sm:text-sm font-semibold text-gray-700">${esc(item.label)}</span>
           </button>
         `;
       })
@@ -123,27 +144,27 @@ function initCotizador() {
   // 5. Cálculo y actualización de la vista
   function calcularCotizacion() {
     const servicioKey = cotServicio.value;
-    const servicioObj = CONFIG.servicios[servicioKey] || { base: 0, label: "" };
+    const servicioObj = own(CONFIG.servicios, servicioKey, { base: 0, label: "" });
 
     // Distancia
     let costoDistancia = 0;
     let labelDistancia = "";
 
     if (modoDistancia === "zona") {
-      const zonaObj = CONFIG.zonas[cotZona.value] || { recargo: 0, label: "" };
+      const zonaObj = own(CONFIG.zonas, cotZona.value, { recargo: 0, label: "" });
       costoDistancia = zonaObj.recargo;
       labelDistancia = `Zona: ${zonaObj.label}`;
     } else {
-      const kmVal = Math.max(0, parseFloat(cotKm.value) || 0);
+      const kmVal = Math.min(MAX_KM, Math.max(0, parseFloat(cotKm.value) || 0));
       costoDistancia = kmVal * CONFIG.precioPorKm;
       labelDistancia = `${kmVal} km ($${CONFIG.precioPorKm}/km)`;
     }
 
     // Urgencia
-    const urgenciaObj = CONFIG.urgencia[urgenciaSeleccionada] || {
+    const urgenciaObj = own(CONFIG.urgencia, urgenciaSeleccionada, {
       recargo: 0,
       label: "",
-    };
+    });
     const costoUrgencia = urgenciaObj.recargo;
 
     // Espera
@@ -152,10 +173,10 @@ function initCotizador() {
       (minutosEspera / CONFIG.tramoMinutos) * CONFIG.precioPorTramoEspera;
 
     // Adicional
-    const adicionalObj = CONFIG.adicionales[cotAdicional.value] || {
+    const adicionalObj = own(CONFIG.adicionales, cotAdicional.value, {
       recargo: 0,
       label: "",
-    };
+    });
     const costoAdicional = adicionalObj.recargo;
 
     // Total final
@@ -179,7 +200,7 @@ function initCotizador() {
       .map(
         (item) => `
         <div class="flex justify-between items-start gap-3 py-1.5 border-b border-gray-100 last:border-0">
-          <dt class="min-w-0 break-words text-gray-500">${item.label}</dt>
+          <dt class="min-w-0 break-words text-gray-500">${esc(item.label)}</dt>
           <dd class="shrink-0 whitespace-nowrap font-semibold text-gray-800">${formatMoney(item.val)}</dd>
         </div>
       `,
@@ -554,13 +575,13 @@ function renderServices() {
     <div class="bg-white p-5 sm:p-6 lg:p-8 rounded-2xl shadow-sm hover:shadow-xl transition-shadow border border-gray-100 text-center flex flex-col justify-between">
       <div>
         <div class="w-14 h-14 sm:w-16 sm:h-16 bg-blue-50 text-primary rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 text-2xl sm:text-3xl">
-          <i class="fa-solid ${s.icon}" aria-hidden="true"></i>
+          <i class="fa-solid ${esc(s.icon)}" aria-hidden="true"></i>
         </div>
-        <h3 class="text-lg sm:text-xl font-bold mb-2 sm:mb-3 break-words">${s.title}</h3>
-        <p class="text-gray-600 text-sm sm:text-base leading-relaxed">${s.text}</p>
+        <h3 class="text-lg sm:text-xl font-bold mb-2 sm:mb-3 break-words">${esc(s.title)}</h3>
+        <p class="text-gray-600 text-sm sm:text-base leading-relaxed">${esc(s.text)}</p>
       </div>
       <div>
-        <a href="${waLink(s.msg)}" target="_blank" rel="noopener noreferrer"
+        <a href="${esc(waLink(s.msg))}" target="_blank" rel="noopener noreferrer"
           class="inline-block mt-5 sm:mt-6 bg-secondary text-dark font-bold text-sm sm:text-base px-5 py-2.5 rounded-full shadow-lg hover:bg-yellow-400 transition-transform hover:scale-105">
           Cotizar trámite <i class="fa-brands fa-whatsapp ml-2" aria-hidden="true"></i>
         </a>
@@ -577,18 +598,18 @@ function renderReviews() {
     <div class="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
       <div>
         <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 shrink-0 ${r.bg} rounded-full flex items-center justify-center font-bold" aria-hidden="true">
-            ${r.initial}
+          <div class="w-10 h-10 shrink-0 ${esc(r.bg)} rounded-full flex items-center justify-center font-bold" aria-hidden="true">
+            ${esc(r.initial)}
           </div>
           <div class="min-w-0">
-            <h4 class="font-semibold text-sm sm:text-base break-words">${r.name}</h4>
+            <h4 class="font-semibold text-sm sm:text-base break-words">${esc(r.name)}</h4>
             <div class="flex text-secondary text-[10px] sm:text-xs" aria-label="5 de 5 estrellas">
               ${'<i class="fa-solid fa-star" aria-hidden="true"></i>'.repeat(5)}
             </div>
           </div>
           <i class="fa-brands fa-google text-gray-300 ml-auto" aria-hidden="true"></i>
         </div>
-        <p class="text-sm sm:text-base text-gray-600 leading-relaxed italic">&ldquo;${r.text}&rdquo;</p>
+        <p class="text-sm sm:text-base text-gray-600 leading-relaxed italic">&ldquo;${esc(r.text)}&rdquo;</p>
       </div>
       <p class="text-[10px] sm:text-xs text-gray-400 mt-4 uppercase tracking-widest">Reseña verificada</p>
     </div>`,
@@ -600,14 +621,14 @@ function renderSocials() {
   if (!el) return;
   el.innerHTML = SOCIALS.map(
     (s) => `
-    <a href="${s.url}" target="_blank" rel="noopener noreferrer"
+    <a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener noreferrer"
       class="social-card bg-white p-4 sm:p-6 rounded-2xl shadow-sm flex items-center gap-4 hover:shadow-md transition-all">
-      <div class="social-icon shrink-0 w-12 h-12 ${s.bg} text-white rounded-xl flex items-center justify-center text-2xl transition-transform">
-        <i class="fa-brands ${s.icon}" aria-hidden="true"></i>
+      <div class="social-icon shrink-0 w-12 h-12 ${esc(s.bg)} text-white rounded-xl flex items-center justify-center text-2xl transition-transform">
+        <i class="fa-brands ${esc(s.icon)}" aria-hidden="true"></i>
       </div>
       <div class="min-w-0">
-        <h4 class="font-bold text-dark">${s.name}</h4>
-        <p class="text-xs sm:text-sm text-gray-500 break-words">${s.handle}</p>
+        <h4 class="font-bold text-dark">${esc(s.name)}</h4>
+        <p class="text-xs sm:text-sm text-gray-500 break-words">${esc(s.handle)}</p>
       </div>
     </a>`,
   ).join("");
@@ -623,10 +644,10 @@ function renderMensajeriaServices() {
     <div data-reveal data-reveal-index="${i}"
       class="group bg-white p-5 sm:p-6 rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 transition-all hover:-translate-y-1">
       <div class="w-12 h-12 bg-blue-50 text-primary rounded-xl flex items-center justify-center mb-4 text-lg transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
-        <i class="fa-solid ${s.icon}" aria-hidden="true"></i>
+        <i class="fa-solid ${esc(s.icon)}" aria-hidden="true"></i>
       </div>
-      <h4 class="text-base sm:text-lg font-bold mb-2 text-dark break-words">${s.title}</h4>
-      <p class="text-sm sm:text-base text-gray-600 leading-relaxed">${s.text}</p>
+      <h4 class="text-base sm:text-lg font-bold mb-2 text-dark break-words">${esc(s.title)}</h4>
+      <p class="text-sm sm:text-base text-gray-600 leading-relaxed">${esc(s.text)}</p>
     </div>`,
   ).join("");
 }
@@ -638,12 +659,12 @@ function renderMensajeriaSteps() {
     (s, i) => `
     <div data-reveal data-reveal-index="${i}" class="mensajeria-step relative flex md:flex-col items-start md:items-center gap-6 md:gap-0 md:text-center flex-1">
       <div class="mensajeria-step-icon shrink-0 w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center text-lg shadow-lg z-10 md:mb-6">
-        <i class="fa-solid ${s.icon}" aria-hidden="true"></i>
+        <i class="fa-solid ${esc(s.icon)}" aria-hidden="true"></i>
       </div>
       <div class="md:px-3">
         <p class="text-[11px] font-bold uppercase tracking-widest text-secondary mb-1">Paso ${i + 1}</p>
-        <h4 class="text-base md:text-sm lg:text-base font-bold text-dark mb-1">${s.title}</h4>
-        <p class="text-sm md:text-xs lg:text-sm text-gray-600 leading-relaxed md:max-w-[200px] md:mx-auto">${s.text}</p>
+        <h4 class="text-base md:text-sm lg:text-base font-bold text-dark mb-1">${esc(s.title)}</h4>
+        <p class="text-sm md:text-xs lg:text-sm text-gray-600 leading-relaxed md:max-w-[200px] md:mx-auto">${esc(s.text)}</p>
       </div>
     </div>`,
   ).join("");
@@ -656,10 +677,10 @@ function renderMensajeriaFeatures() {
     (f, i) => `
     <div data-reveal data-reveal-index="${i}" class="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-6 text-white">
       <div class="w-10 h-10 bg-secondary/20 text-secondary rounded-lg flex items-center justify-center mb-4 text-base">
-        <i class="fa-solid ${f.icon}" aria-hidden="true"></i>
+        <i class="fa-solid ${esc(f.icon)}" aria-hidden="true"></i>
       </div>
-      <h4 class="text-base font-bold mb-2">${f.title}</h4>
-      <p class="text-sm text-blue-100 leading-relaxed">${f.text}</p>
+      <h4 class="text-base font-bold mb-2">${esc(f.title)}</h4>
+      <p class="text-sm text-blue-100 leading-relaxed">${esc(f.text)}</p>
     </div>`,
   ).join("");
 }
@@ -671,11 +692,11 @@ function renderTrackingSteps() {
     (s, i) => `
     <li class="tracking-step flex items-start gap-3" data-step="${i}">
       <span class="tracking-step-icon shrink-0 w-8 h-8 rounded-full border-2 border-gray-200 text-gray-400 flex items-center justify-center text-xs transition-colors">
-        <i class="fa-solid ${s.icon}" aria-hidden="true"></i>
+        <i class="fa-solid ${esc(s.icon)}" aria-hidden="true"></i>
       </span>
       <span>
-        <span class="tracking-step-title block text-sm font-bold text-gray-400 transition-colors">${s.title}</span>
-        <span class="block text-xs sm:text-sm text-gray-500 leading-relaxed">${s.text}</span>
+        <span class="tracking-step-title block text-sm font-bold text-gray-400 transition-colors">${esc(s.title)}</span>
+        <span class="block text-xs sm:text-sm text-gray-500 leading-relaxed">${esc(s.text)}</span>
       </span>
     </li>`,
   ).join("");
@@ -800,9 +821,9 @@ function initNewsCarousel() {
     (n) => `
     <div class="carousel-slide px-1">
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8 md:p-10 h-full">
-        <span class="inline-block text-xs font-bold uppercase tracking-widest text-secondary bg-primary/5 px-3 py-1 rounded-full mb-4">${n.tag}</span>
-        <h4 class="text-lg sm:text-xl font-bold text-dark mb-2 break-words">${n.title}</h4>
-        <p class="text-sm sm:text-base text-gray-600 leading-relaxed">${n.text}</p>
+        <span class="inline-block text-xs font-bold uppercase tracking-widest text-secondary bg-primary/5 px-3 py-1 rounded-full mb-4">${esc(n.tag)}</span>
+        <h4 class="text-lg sm:text-xl font-bold text-dark mb-2 break-words">${esc(n.title)}</h4>
+        <p class="text-sm sm:text-base text-gray-600 leading-relaxed">${esc(n.text)}</p>
       </div>
     </div>`,
   ).join("");
@@ -893,11 +914,11 @@ function initFaq() {
     <div class="faq-item bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" data-open="false">
       <button type="button" class="faq-toggle w-full flex items-center justify-between gap-4 text-left px-4 sm:px-6 py-4 sm:py-5 text-sm sm:text-base font-semibold text-dark"
         aria-expanded="false" aria-controls="faq-answer-${i}">
-        <span class="min-w-0 break-words">${item.q}</span>
+        <span class="min-w-0 break-words">${esc(item.q)}</span>
         <i class="fa-solid fa-chevron-down faq-chevron text-secondary" aria-hidden="true"></i>
       </button>
       <div class="faq-answer" id="faq-answer-${i}">
-        <div class="px-4 sm:px-6 pb-4 sm:pb-5 text-sm sm:text-base text-gray-600 leading-relaxed">${item.a}</div>
+        <div class="px-4 sm:px-6 pb-4 sm:pb-5 text-sm sm:text-base text-gray-600 leading-relaxed">${esc(item.a)}</div>
       </div>
     </div>`,
   ).join("");
@@ -963,6 +984,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initCounters();
   initScrollReveal();
   initNewsletterForm();
+  initContactForm();
   initInitialRoute();
 });
 
@@ -988,4 +1010,548 @@ function initNewsletterForm() {
     );
     form.reset();
   });
+}
+
+
+/* ============ 11. FORMULARIO DE CONTACTO (actas y presupuestos) ============
+   - Envío con fetch (JSON) a Web3Forms, que reenvía a gestoriaintegraltuc@gmail.com.
+     La access_key de Web3Forms es PÚBLICA por diseño (no es un secreto): solo
+     permite enviar mails a la casilla con la que se registró. Se protege
+     restringiendo el dominio permitido desde el panel de Web3Forms.
+   - Sin eventos inline ni estilos inline (CSP): todo se maneja desde acá.
+   - Todo texto que se muestra se inserta con textContent (nunca innerHTML),
+     por lo que lo que escriba el usuario no puede inyectar HTML ni scripts. */
+const CONTACT_FORM = {
+  endpoint: "https://api.web3forms.com/submit",
+  accessKey: "bdcd4c2e-e9a4-48ae-bf60-7038aa31f1b5", // ← reemplazar (ver instrucciones)
+  siteName: "Web Gestoría Integral Tucumán",
+  timeoutMs: 15000,
+  cooldownMs: 15000,
+};
+
+const CONSULTAS = {
+  acta: "Pedido de acta",
+  presupuesto: "Solicitud de presupuesto",
+  otro: "Otro trámite",
+};
+
+// Etiquetas que cambian según el tipo de acta elegido
+const ACTAS = {
+  "": {
+    titulo: "",
+    nombre: "Nombre completo",
+    lugar: "Lugar",
+    fecha: "Fecha exacta",
+    ph: "",
+  },
+  nacimiento: {
+    titulo: "Acta de nacimiento",
+    nombre: "Nombre completo de la persona",
+    lugar: "Lugar de nacimiento",
+    fecha: "Fecha exacta de nacimiento",
+    ph: "Ej. María Fernanda López",
+  },
+  matrimonio: {
+    titulo: "Acta de matrimonio",
+    nombre: "Nombre completo de ambos cónyuges",
+    lugar: "Lugar del matrimonio",
+    fecha: "Fecha exacta del matrimonio",
+    ph: "Ej. Juan Pérez y Ana Torres",
+  },
+  defuncion: {
+    titulo: "Acta de defunción",
+    nombre: "Nombre completo de la persona fallecida",
+    lugar: "Lugar de defunción",
+    fecha: "Fecha exacta de defunción",
+    ph: "Ej. Roberto Carlos Sánchez",
+  },
+};
+
+const RECTIFICACIONES = {
+  rectificacion: "Acta con rectificación",
+  oficio: "Con oficio judicial",
+};
+
+const PAGOS = {
+  billetera: "Billeteras virtuales",
+  efectivo: "Efectivo",
+};
+
+// panel: bloque que se muestra bajo el selector de envío
+const ENVIOS = {
+  capital: {
+    label: "Dentro de Tucumán capital (en el día)",
+    panel: "agente",
+    intro: "Hola! Quiero consultar por un envío en el día dentro de Tucumán capital.",
+  },
+  pais: {
+    label: "Dentro del país",
+    panel: "cotizar",
+    texto: "Envío dentro del país: solicitá tu cotización inmediata por WhatsApp.",
+    intro: "Hola! Quiero cotizar un envío dentro del país.",
+  },
+  exterior: {
+    label: "Exterior",
+    panel: "cotizar",
+    texto: "Envío al exterior: solicitá tu cotización inmediata por WhatsApp.",
+    intro: "Hola! Quiero cotizar un envío al exterior.",
+  },
+};
+
+function initContactForm() {
+  const form = document.getElementById("contactForm");
+  if (!form) return;
+
+  const $ = (id) => document.getElementById(id);
+  const el = {
+    nombre: $("cfNombre"),
+    contacto: $("cfContacto"),
+    consulta: $("cfConsulta"),
+    acta: $("cfActa"),
+    actaTipo: $("cfActaTipo"),
+    actaNombre: $("cfActaNombre"),
+    actaLugar: $("cfActaLugar"),
+    actaFecha: $("cfActaFecha"),
+    dni: $("cfDni"),
+    numActa: $("cfNumActa"),
+    tomo: $("cfTomo"),
+    folio: $("cfFolio"),
+    anio: $("cfAnio"),
+    rectificacion: $("cfRectificacion"),
+    envio: $("cfEnvio"),
+    pago: $("cfPago"),
+    mensaje: $("cfMensaje"),
+    privacidad: $("cfPrivacidad"),
+    website: $("cfWebsite"),
+    status: $("cfStatus"),
+    fallback: $("cfFallback"),
+    submit: $("cfSubmit"),
+    cotizarTexto: $("cfCotizarTexto"),
+  };
+  if (Object.values(el).some((node) => !node)) {
+    console.warn("[contacto] Faltan elementos del formulario en el HTML.");
+    return;
+  }
+
+  /* ---------- Utilidades de saneamiento ---------- */
+  const has = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
+  // Caracteres de control y de dirección de texto (bidi) que no deben viajar en el mail
+  const CTRL = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g;
+  const cleanLine = (v, max = 120) =>
+    String(v ?? "").normalize("NFC").replace(CTRL, "").replace(/\s+/g, " ").trim().slice(0, max);
+  const cleanText = (v, max = 1500) =>
+    String(v ?? "")
+      .normalize("NFC")
+      .replace(CTRL, "")
+      .replace(/\r\n?/g, "\n")
+      .replace(/[ \t]+/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim()
+      .slice(0, max);
+
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const NAME_RE = /^[\p{L}\p{M}][\p{L}\p{M}'’.,&\/\- ]*$/u;
+  const PLACE_RE = /^[\p{L}\p{N}\p{M}][\p{L}\p{N}\p{M}'’.,()\/\- ]*$/u;
+  const REF_RE = /^[\p{L}\p{N}][\p{L}\p{N}\p{M}.\/\- ]{0,19}$/u;
+
+  const pad = (n) => String(n).padStart(2, "0");
+  const todayISO = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+  const formatFecha = (iso) => iso.split("-").reverse().join("/");
+  const wordsOf = (s) => s.split(" ").filter((w) => w.length > 1);
+
+  // La fecha del acta no puede ser futura (se fija por JS, no con atributos inline)
+  el.actaFecha.max = todayISO();
+
+  /* ---------- Reglas de validación (una por campo, en el orden del DOM) ---------- */
+  const optionalEnum = (map) => (n) =>
+    !n.value || has(map, n.value) ? "" : "Elegí una opción válida.";
+
+  const rules = {
+    nombre: (n) => {
+      const s = cleanLine(n.value, 80);
+      if (!s) return "Ingresá tu nombre y apellido.";
+      if (!NAME_RE.test(s) || wordsOf(s).length < 2)
+        return "Escribí tu nombre y apellido, solo con letras.";
+      return "";
+    },
+    contacto: (n) => {
+      const s = cleanLine(n.value, 100);
+      if (!s) return "Dejanos un correo o un teléfono/WhatsApp para responderte.";
+      if (s.includes("@"))
+        return EMAIL_RE.test(s) ? "" : "El correo no parece válido. Ejemplo: nombre@correo.com";
+      const digits = s.replace(/[\s().\-+]/g, "");
+      return /^\d{8,15}$/.test(digits)
+        ? ""
+        : "Ingresá un teléfono válido con código de área, por ejemplo 381 4123456.";
+    },
+    consulta: (n) => (has(CONSULTAS, n.value) ? "" : "Elegí el tipo de consulta."),
+    actaTipo: (n) =>
+      n.value && has(ACTAS, n.value) ? "" : "Elegí el tipo de acta que necesitás.",
+    actaNombre: (n) => {
+      const s = cleanLine(n.value, 120);
+      if (!s) return "Ingresá el nombre completo tal como figura en el acta.";
+      if (!NAME_RE.test(s) || wordsOf(s).length < 2)
+        return "Escribí nombre y apellido completos, solo con letras.";
+      return "";
+    },
+    actaLugar: (n) => {
+      const s = cleanLine(n.value, 100);
+      if (!s) return "Ingresá el lugar exacto (ciudad o localidad y provincia).";
+      return s.length >= 2 && PLACE_RE.test(s) ? "" : "El lugar contiene caracteres no válidos.";
+    },
+    actaFecha: (n) => {
+      const v = n.value;
+      if (!v) return "Ingresá la fecha exacta (día, mes y año).";
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(v))) return "La fecha no es válida.";
+      if (v < "1850-01-01") return "La fecha no puede ser anterior a 1850.";
+      if (v > todayISO()) return "La fecha no puede ser futura.";
+      return "";
+    },
+    dni: (n) => {
+      const d = n.value.replace(/[.\s]/g, "");
+      return !d || /^\d{7,8}$/.test(d) ? "" : "El DNI debe tener 7 u 8 números, sin puntos.";
+    },
+    numActa: (n) => {
+      const s = cleanLine(n.value, 20);
+      return !s || REF_RE.test(s) ? "" : "Usá solo letras, números, guion o barra (máx. 20).";
+    },
+    tomo: (n) => {
+      const s = cleanLine(n.value, 20);
+      return !s || REF_RE.test(s) ? "" : "Usá solo letras, números, guion o barra (máx. 20).";
+    },
+    folio: (n) => {
+      const s = cleanLine(n.value, 20);
+      return !s || REF_RE.test(s) ? "" : "Usá solo letras, números, guion o barra (máx. 20).";
+    },
+    anio: (n) => {
+      const s = cleanLine(n.value, 4);
+      if (!s) return "";
+      const max = new Date().getFullYear();
+      if (!/^\d{4}$/.test(s) || +s < 1850 || +s > max) return `Ingresá un año entre 1850 y ${max}.`;
+      return "";
+    },
+    rectificacion: optionalEnum(RECTIFICACIONES),
+    envio: optionalEnum(ENVIOS),
+    pago: optionalEnum(PAGOS),
+    mensaje: (n) => {
+      if (!n.required) return "";
+      const s = cleanText(n.value, 1500);
+      if (!s) return "Contanos qué trámite necesitás.";
+      return s.length >= 10 ? "" : "Contanos un poco más: escribí al menos 10 caracteres.";
+    },
+    privacidad: (n) =>
+      n.checked ? "" : "Para enviar la consulta tenés que aceptar la política de privacidad.",
+  };
+  const FIELD_KEYS = Object.keys(rules);
+  const keyOf = new Map(FIELD_KEYS.map((k) => [el[k], k]));
+
+  /* ---------- Mostrar / limpiar errores (accesible) ---------- */
+  const isActive = (node) => !node.disabled && !node.closest("fieldset[disabled], [hidden]");
+
+  function toggleToken(node, attr, token, on) {
+    const set = new Set((node.getAttribute(attr) || "").split(/\s+/).filter(Boolean));
+    if (on) set.add(token);
+    else set.delete(token);
+    if (set.size) node.setAttribute(attr, [...set].join(" "));
+    else node.removeAttribute(attr);
+  }
+
+  function paintError(node, msg) {
+    const wrap = node.closest(".cf-field");
+    if (!wrap) return;
+    const errId = `${node.id}Error`;
+    let p = document.getElementById(errId);
+    if (!msg) {
+      if (p) p.remove();
+      node.removeAttribute("aria-invalid");
+      toggleToken(node, "aria-describedby", errId, false);
+      return;
+    }
+    if (!p) {
+      p = document.createElement("p");
+      p.id = errId;
+      p.className = "cf-error";
+      wrap.appendChild(p);
+    }
+    p.textContent = msg; // textContent: nunca innerHTML
+    node.setAttribute("aria-invalid", "true");
+    toggleToken(node, "aria-describedby", errId, true);
+    const details = node.closest("details");
+    if (details) details.open = true; // que el error no quede escondido
+  }
+
+  function validateField(key) {
+    const node = el[key];
+    const msg = isActive(node) ? rules[key](node) : "";
+    paintError(node, msg);
+    return msg;
+  }
+
+  function validateAll() {
+    let first = null;
+    let count = 0;
+    FIELD_KEYS.forEach((key) => {
+      if (validateField(key)) {
+        count += 1;
+        if (!first) first = el[key];
+      }
+    });
+    return { first, count };
+  }
+
+  /* ---------- UI dinámica ---------- */
+  function setLabel(node, text) {
+    const span = form.querySelector(`label[for="${node.id}"] [data-label-text]`);
+    if (span) span.textContent = text;
+  }
+
+  function applyActaTexts() {
+    const t = has(ACTAS, el.actaTipo.value) ? ACTAS[el.actaTipo.value] : ACTAS[""];
+    setLabel(el.actaNombre, t.nombre);
+    setLabel(el.actaLugar, t.lugar);
+    setLabel(el.actaFecha, t.fecha);
+    el.actaNombre.placeholder = t.ph;
+  }
+
+  function applyConsulta() {
+    const isActa = el.consulta.value === "acta";
+    el.acta.hidden = !isActa;
+    el.acta.disabled = !isActa; // un fieldset deshabilitado desactiva todos sus campos
+    if (!isActa) {
+      ["actaTipo", "actaNombre", "actaLugar", "actaFecha", "dni", "numActa", "tomo", "folio", "anio", "rectificacion"].forEach(
+        (k) => paintError(el[k], ""),
+      );
+    }
+    el.mensaje.required = !isActa;
+    setLabel(el.mensaje, isActa ? "Información adicional (opcional)" : "Mensaje o detalle del trámite");
+    const star = form.querySelector("[data-req]");
+    if (star) star.hidden = isActa;
+    el.mensaje.placeholder = isActa
+      ? "Ej.: para qué trámite necesitás el acta, urgencia, otros datos útiles"
+      : "Ej.: datos del acta, patente/dominio o trámite requerido";
+    if (!el.mensaje.required) paintError(el.mensaje, "");
+  }
+
+  function applyEnvio() {
+    const cfg = has(ENVIOS, el.envio.value) ? ENVIOS[el.envio.value] : null;
+    form.querySelectorAll("[data-envio-panel]").forEach((panel) => {
+      panel.hidden = !(cfg && panel.dataset.envioPanel === cfg.panel);
+    });
+    if (cfg && cfg.texto) el.cotizarTexto.textContent = cfg.texto;
+    updateWhatsAppLinks();
+  }
+
+  // Arma el mensaje de WhatsApp con los datos ya cargados (sin DNI ni datos registrales)
+  function updateWhatsAppLinks() {
+    if (!has(ENVIOS, el.envio.value)) return;
+    const cfg = ENVIOS[el.envio.value];
+    const lines = [cfg.intro];
+    const nombre = cleanLine(el.nombre.value, 80);
+    if (nombre) lines.push(`Nombre: ${nombre}`);
+    if (has(CONSULTAS, el.consulta.value)) lines.push(`Consulta: ${CONSULTAS[el.consulta.value]}`);
+    if (el.consulta.value === "acta" && el.actaTipo.value && has(ACTAS, el.actaTipo.value)) {
+      const a = ACTAS[el.actaTipo.value];
+      lines.push(`Acta: ${a.titulo}`);
+      const lugar = cleanLine(el.actaLugar.value, 100);
+      if (lugar) lines.push(`${a.lugar}: ${lugar}`);
+      if (el.actaFecha.value && !rules.actaFecha(el.actaFecha))
+        lines.push(`${a.fecha}: ${formatFecha(el.actaFecha.value)}`);
+    }
+    const link = form.querySelector(`[data-envio-panel="${cfg.panel}"] a[data-cf-wa]`);
+    if (link) link.href = waLink(lines.join("\n")); // siempre https://wa.me/… con texto codificado
+  }
+
+  /* ---------- Estado del envío ---------- */
+  function showStatus(kind, msg, { focus = true, fallback = false } = {}) {
+    el.status.hidden = false;
+    el.status.classList.toggle("is-ok", kind === "ok");
+    el.status.classList.toggle("is-error", kind === "error");
+    el.status.setAttribute("role", kind === "error" ? "alert" : "status");
+    el.status.textContent = msg; // textContent: escapa cualquier HTML
+    el.fallback.hidden = !fallback;
+    if (focus) el.status.focus();
+  }
+
+  function hideStatus() {
+    el.status.hidden = true;
+    el.status.textContent = "";
+    el.fallback.hidden = true;
+  }
+
+  let sending = false;
+  let lastSentAt = 0;
+  const submitLabel = el.submit.querySelector("[data-label]");
+
+  function setSending(on) {
+    sending = on;
+    el.submit.disabled = on;
+    el.submit.setAttribute("aria-busy", String(on));
+    if (submitLabel) submitLabel.textContent = on ? "Enviando…" : "Enviar consulta";
+  }
+
+  /* ---------- Armado del mensaje que llega al mail ---------- */
+  function buildPayload() {
+    const consulta = el.consulta.value;
+    const contacto = cleanLine(el.contacto.value, 100);
+    const p = {
+      access_key: CONTACT_FORM.accessKey,
+      subject: `Nueva consulta web: ${CONSULTAS[consulta]}`,
+      from_name: CONTACT_FORM.siteName,
+      "Nombre y apellido": cleanLine(el.nombre.value, 80),
+      "Tipo de consulta": CONSULTAS[consulta],
+    };
+    if (EMAIL_RE.test(contacto)) p.email = contacto; // Web3Forms lo usa como Reply-To
+    else p["Teléfono / WhatsApp"] = contacto;
+
+    if (consulta === "acta") {
+      const a = ACTAS[el.actaTipo.value];
+      p["Tipo de acta"] = a.titulo;
+      p[a.nombre] = cleanLine(el.actaNombre.value, 120);
+      p[a.lugar] = cleanLine(el.actaLugar.value, 100);
+      p[a.fecha] = formatFecha(el.actaFecha.value);
+      const dni = el.dni.value.replace(/[.\s]/g, "");
+      if (dni) p["DNI"] = dni;
+      const extras = [
+        ["Número de acta", el.numActa],
+        ["Tomo", el.tomo],
+        ["Folio", el.folio],
+        ["Año", el.anio],
+      ];
+      extras.forEach(([label, node]) => {
+        const v = cleanLine(node.value, 20);
+        if (v) p[label] = v;
+      });
+      if (has(RECTIFICACIONES, el.rectificacion.value))
+        p["Rectificación / oficio"] = RECTIFICACIONES[el.rectificacion.value];
+    }
+
+    if (has(ENVIOS, el.envio.value)) p["Tipo de envío"] = ENVIOS[el.envio.value].label;
+    if (has(PAGOS, el.pago.value)) p["Forma de pago"] = PAGOS[el.pago.value];
+    const mensaje = cleanText(el.mensaje.value, 1500);
+    if (mensaje) p["Mensaje"] = mensaje;
+    p["Consentimiento de privacidad"] = `Aceptado el ${new Date().toISOString()}`;
+    return p;
+  }
+
+  async function sendPayload(payload) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), CONTACT_FORM.timeoutMs);
+    try {
+      const res = await fetch(CONTACT_FORM.endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+        signal: ctrl.signal,
+        credentials: "omit",
+      });
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {
+        /* respuesta sin JSON */
+      }
+      return res.ok && data && data.success === true;
+    } catch {
+      return false;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function resetUi() {
+    FIELD_KEYS.forEach((k) => paintError(el[k], ""));
+    applyConsulta();
+    applyActaTexts();
+    applyEnvio();
+  }
+
+  /* ---------- Eventos (sin handlers inline) ---------- */
+  form.addEventListener("change", (e) => {
+    const t = e.target;
+    if (t === el.consulta) applyConsulta();
+    if (t === el.actaTipo) applyActaTexts();
+    if (t === el.envio) applyEnvio();
+    const key = keyOf.get(t);
+    if (key && t.getAttribute("aria-invalid") === "true") validateField(key);
+    updateWhatsAppLinks();
+  });
+
+  form.addEventListener("input", (e) => {
+    const t = e.target;
+    const key = keyOf.get(t);
+    if (key && t.getAttribute("aria-invalid") === "true") validateField(key);
+    updateWhatsAppLinks();
+  });
+
+  // Al salir de un campo con contenido se valida el formato (sin gritar por campos aún vacíos)
+  form.addEventListener("focusout", (e) => {
+    const t = e.target;
+    const key = keyOf.get(t);
+    if (!key || t.type === "checkbox") return;
+    if (t.value || t.getAttribute("aria-invalid") === "true") validateField(key);
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (sending) return;
+    hideStatus();
+
+    // Honeypot: un bot rellena el campo oculto; fingimos éxito y no enviamos nada
+    if (el.website.value.trim() !== "") {
+      form.reset();
+      resetUi();
+      showStatus("ok", "¡Gracias! Recibimos tu consulta.", { focus: false });
+      return;
+    }
+
+    const { first, count } = validateAll();
+    if (first) {
+      showStatus(
+        "error",
+        count === 1
+          ? "Revisá el campo marcado en rojo."
+          : `Revisá los ${count} campos marcados en rojo.`,
+        { focus: false },
+      );
+      first.focus();
+      return;
+    }
+
+    if (Date.now() - lastSentAt < CONTACT_FORM.cooldownMs) {
+      showStatus("error", "Ya enviamos tu consulta. Esperá unos segundos antes de enviar otra.");
+      return;
+    }
+
+    const failMsg =
+      "No pudimos enviar tu consulta en este momento. Probá de nuevo en unos minutos o escribinos directamente.";
+
+    if (!CONTACT_FORM.accessKey || CONTACT_FORM.accessKey.startsWith("TU_")) {
+      console.error("[contacto] Falta configurar CONTACT_FORM.accessKey en main.js.");
+      showStatus("error", failMsg, { fallback: true });
+      return;
+    }
+
+    const primerNombre = cleanLine(el.nombre.value, 80).split(" ")[0];
+    setSending(true);
+    const ok = await sendPayload(buildPayload());
+    setSending(false);
+
+    if (!ok) {
+      showStatus("error", failMsg, { fallback: true });
+      return;
+    }
+
+    lastSentAt = Date.now();
+    form.reset();
+    resetUi();
+    showStatus(
+      "ok",
+      `¡Gracias, ${primerNombre}! Recibimos tu consulta y te vamos a responder a la brevedad.`,
+    );
+  });
+
+  resetUi();
 }

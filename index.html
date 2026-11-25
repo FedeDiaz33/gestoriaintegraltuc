@@ -11,36 +11,15 @@
     patentamientos, trámites administrativos y actas. Gestión rápida, 
     transparente y de confianza." />
 
-  <!-- Google Tag Manager -->
-  <script>
-    (function (w, d, s, l, i) {
-      w[l] = w[l] || [];
-      w[l].push({
-        "gtm.start": new Date().getTime(),
-        event: "gtm.js",
-      });
-      var f = d.getElementsByTagName(s)[0],
-        j = d.createElement(s),
-        dl = l != "dataLayer" ? "&l=" + l : "";
-      j.async = true;
-      j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
-      f.parentNode.insertBefore(j, f);
-    })(window, document, "script", "dataLayer", "GTM-PHHS7WM");
-  </script>
-  <!-- End Google Tag Manager -->
-
   <!-- SEGURIDAD: Referrer Policy -->
   <meta name="referrer" content="strict-origin-when-cross-origin" />
 
-  <!-- SEGURIDAD: Content Security Policy (meta tag)-->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 
-    https://www.googletagmanager.com https://www.google-analytics.com; 
-    style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com; 
-    font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; 
-    connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com 
-    https://*.googletagmanager.com https://analytics.google.com; 
-    img-src 'self' data: https://images.unsplash.com 
-    https://*.googletagmanager.com https://*.google-analytics.com; object-src 'none'; base-uri 'self';" />
+  <!-- SEGURIDAD: CSP (meta). Debe coincidir con el header de Cloudflare (ver _headers),
+       que además lleva frame-ancestors porque esa directiva no funciona dentro de <meta>. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://tracker.metricool.com; style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://api.web3forms.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://tracker.metricool.com; frame-src https://www.googletagmanager.com; form-action 'self'; base-uri 'self'; object-src 'none'" />
+
+  <!-- Analítica: GTM + gtag (antes eran scripts en línea; ahora archivo propio para cumplir la CSP) -->
+  <script src="analytics-init.js" defer></script>
 
   <link rel="apple-touch-icon" href="imagenes/JD3.svg" sizes="180x180" />
   <link rel="icon" href="imagenes/JD3.svg" type="image/svg+xml" sizes="32x32" />
@@ -49,31 +28,21 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <!-- Tailwind compilado (build local, no CDN: ver tailwind.config.js). Reemplaza al Tailwind Play CDN. -->
   <link href="./dist/output.css" rel="stylesheet" />
   <link href="./styles.css" rel="stylesheet" />
 
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GWQKTPTSVN"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-    gtag("js", new Date());
-
-    gtag("config", "G-GWQKTPTSVN");
-  </script>
 </head>
 
 <body class="bg-[#F7F5F0] text-gray-800 flex flex-col min-h-screen font-sans overflow-x-hidden">
   <!-- Google Tag Manager (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PHHS7WM" height="0" width="0"
-      style="display: none; visibility: hidden"></iframe></noscript>
+      hidden></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
 
   <!-- Agregamos la clase animate-bounce -->
@@ -169,7 +138,7 @@
               Soluciones ágiles para tus trámites
             </h1>
             <p class="text-body text-blue-100 mb-6 md:mb-8">
-              Registro Civíl y Automotor - Colegio de Escribanos <br />
+              Registro Civíl - Automotor - Colegio de Escribanos <br />
               Poder judicial - Universidad UNT - Institutos privados <br />
               Apostillas - Armados de legajos - Mensajeria judicial <br />
             </p>
@@ -624,7 +593,7 @@
                 </div>
                 <select id="cotZona"
                   class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base sm:text-sm font-medium text-dark focus:border-primary focus:outline-none transition-colors"></select>
-                <input id="cotKm" type="number" min="0" step="1" inputmode="numeric" placeholder="Ej: 8"
+                <input id="cotKm" type="number" min="0" max="1000" step="1" inputmode="numeric" placeholder="Ej: 8"
                   class="hidden w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base sm:text-sm font-medium text-dark focus:border-primary focus:outline-none transition-colors" />
               </div>
 
@@ -758,7 +727,7 @@
             </p>
             <a href="https://forms.gle/35eRVdvUvqd9Fq5N8" target="_blank" rel="noopener noreferrer"
               class="inline-flex items-center justify-center w-fit bg-secondary text-dark font-bold text-sm sm:text-base px-5 py-3 rounded-full shadow-md hover:bg-yellow-400 transition-transform hover:scale-105">
-              Pedir partidas urgentes por formulario
+              Pedir partidas por formulario de Google
             </a>
             <br />
             <a href="https://wa.me/3814963423" target="_blank" rel="noopener noreferrer"
@@ -767,14 +736,257 @@
               <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
             </a>
           </div>
-          <div class="md:w-1/2 bg-gray-200 min-h-[200px] sm:min-h-[260px] md:min-h-[300px] relative">
-            <img src="Imagenes/partida-nacimiento.avif" alt="Formulario de pedido de partidas"
+          <div class="md:w-1/2 bg-gray-200 min-h-[200px] sm:min-h-[260px] md:min-h-[200px] relative">
+            <img src="Imagenes/partida-whatsapp.jpeg" alt="Formulario de pedido de partidas"
               class="absolute inset-0 w-full h-full object-cover" loading="lazy" />
           </div>
         </div>
       </div>
 
-      <!--Division-->
+      <!-- ===== FORMULARIO DE CONTACTO: pedido de actas / presupuestos ===== -->
+      <div id="formulario-contacto" class="cf-root mt-10 md:mt-16 max-w-3xl mx-auto">
+        <div class="text-center mb-6 md:mb-8">
+          <span
+            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-primary border border-blue-100 mb-3">
+            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+            Formulario de consultas
+          </span>
+          <h3 class="heading-title text-dark">Pedí tu acta o presupuesto</h3>
+          <p class="text-body-dark mt-2 text-body max-w-lg mx-auto">
+            Completá los datos y te respondemos a la brevedad. Los campos
+            marcados con * son obligatorios.
+          </p>
+        </div>
+
+        <div class="cf-card">
+          <!-- Cartel informativo (búsqueda de partidas) -->
+          <div class="cf-notice" role="note">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <p>
+              <strong>Importante:</strong> las partidas se buscan solo con
+              nombre completo, fecha y lugar exacto. Mientras más datos nos
+              proporciones, más rápido se termina el trabajo.
+            </p>
+          </div>
+
+          <form id="contactForm" method="post" novalidate>
+            <div class="cf-grid">
+              <!-- Datos personales -->
+              <div class="cf-field">
+                <label class="cf-label" for="cfNombre">Nombre y apellido <span class="cf-req"
+                    aria-hidden="true">*</span></label>
+                <input id="cfNombre" name="nombre" type="text" class="cf-input" maxlength="80" autocomplete="name"
+                  placeholder="Ej. Juan Pérez" required />
+              </div>
+
+              <div class="cf-field">
+                <label class="cf-label" for="cfContacto">Correo o teléfono / WhatsApp <span class="cf-req"
+                    aria-hidden="true">*</span></label>
+                <input id="cfContacto" name="contacto" type="text" class="cf-input" maxlength="100"
+                  placeholder="Ej. 381 4123456 o nombre@correo.com" required />
+              </div>
+
+              <div class="cf-field cf-span-2">
+                <label class="cf-label" for="cfConsulta">Tipo de consulta <span class="cf-req"
+                    aria-hidden="true">*</span></label>
+                <select id="cfConsulta" name="consulta" class="cf-input" required>
+                  <option value="">Elegí una opción</option>
+                  <option value="acta">Pedido de acta</option>
+                  <option value="presupuesto">Solicitud de presupuesto</option>
+                  <option value="otro">Otro trámite</option>
+                </select>
+              </div>
+
+              <!-- Datos del acta (solo si "Pedido de acta") -->
+              <fieldset id="cfActa" class="cf-fieldset cf-span-2" hidden disabled>
+                <legend class="cf-legend">Datos del acta</legend>
+                <div class="cf-grid">
+                  <div class="cf-field cf-span-2">
+                    <label class="cf-label" for="cfActaTipo">Tipo de acta <span class="cf-req"
+                        aria-hidden="true">*</span></label>
+                    <select id="cfActaTipo" name="acta_tipo" class="cf-input" required>
+                      <option value="">Elegí una opción</option>
+                      <option value="nacimiento">Acta de nacimiento</option>
+                      <option value="matrimonio">Acta de matrimonio</option>
+                      <option value="defuncion">Acta de defunción</option>
+                    </select>
+                  </div>
+
+                  <div class="cf-field cf-span-2">
+                    <label class="cf-label" for="cfActaNombre"><span data-label-text>Nombre completo</span> <span
+                        class="cf-req" aria-hidden="true">*</span></label>
+                    <input id="cfActaNombre" name="acta_nombre" type="text" class="cf-input" maxlength="120"
+                      autocomplete="off" required />
+                  </div>
+
+                  <div class="cf-field">
+                    <label class="cf-label" for="cfActaLugar"><span data-label-text>Lugar</span> <span class="cf-req"
+                        aria-hidden="true">*</span></label>
+                    <input id="cfActaLugar" name="acta_lugar" type="text" class="cf-input" maxlength="100"
+                      autocomplete="off" placeholder="Ej. San Miguel de Tucumán, Tucumán" required />
+                  </div>
+
+                  <div class="cf-field">
+                    <label class="cf-label" for="cfActaFecha"><span data-label-text>Fecha exacta</span> <span
+                        class="cf-req" aria-hidden="true">*</span></label>
+                    <input id="cfActaFecha" name="acta_fecha" type="date" class="cf-input" min="1850-01-01" required />
+                  </div>
+
+                  <!-- Información adicional (opcional) -->
+                  <details class="cf-details cf-span-2">
+                    <summary>Información adicional (opcional, agiliza la búsqueda)</summary>
+                    <div class="cf-details-body">
+                      <div class="cf-grid">
+                        <div class="cf-field">
+                          <label class="cf-label" for="cfDni">DNI</label>
+                          <input id="cfDni" name="dni" type="text" inputmode="numeric" class="cf-input" maxlength="10"
+                            autocomplete="off" placeholder="Sin puntos" />
+                        </div>
+                        <div class="cf-field">
+                          <label class="cf-label" for="cfNumActa">Número de acta</label>
+                          <input id="cfNumActa" name="acta_numero" type="text" class="cf-input" maxlength="20"
+                            autocomplete="off" />
+                        </div>
+                        <div class="cf-span-2 cf-grid cf-grid--3">
+                          <div class="cf-field">
+                            <label class="cf-label" for="cfTomo">Tomo</label>
+                            <input id="cfTomo" name="tomo" type="text" class="cf-input" maxlength="20"
+                              autocomplete="off" />
+                          </div>
+                          <div class="cf-field">
+                            <label class="cf-label" for="cfFolio">Folio</label>
+                            <input id="cfFolio" name="folio" type="text" class="cf-input" maxlength="20"
+                              autocomplete="off" />
+                          </div>
+                          <div class="cf-field">
+                            <label class="cf-label" for="cfAnio">Año</label>
+                            <input id="cfAnio" name="anio" type="text" inputmode="numeric" class="cf-input"
+                              maxlength="4" autocomplete="off" placeholder="Ej. 1998" />
+                          </div>
+                        </div>
+                        <div class="cf-field cf-span-2">
+                          <label class="cf-label" for="cfRectificacion">Rectificación u oficio judicial</label>
+                          <select id="cfRectificacion" name="rectificacion" class="cf-input">
+                            <option value="">Acta común (sin rectificación ni oficio)</option>
+                            <option value="rectificacion">Acta con rectificación</option>
+                            <option value="oficio">Con oficio judicial</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              </fieldset>
+
+              <!-- Envío y pago -->
+              <div class="cf-field">
+                <label class="cf-label" for="cfEnvio">Tipo de envío</label>
+                <select id="cfEnvio" name="envio" class="cf-input">
+                  <option value="">Elegí una opción (opcional)</option>
+                  <option value="capital">Dentro de Tucumán capital (en el día)</option>
+                  <option value="pais">Dentro del país</option>
+                  <option value="exterior">Exterior</option>
+                </select>
+              </div>
+
+              <div class="cf-field">
+                <label class="cf-label" for="cfPago">Forma de pago</label>
+                <select id="cfPago" name="pago" class="cf-input" aria-describedby="cfPagoHint">
+                  <option value="">Elegí una opción (opcional)</option>
+                  <option value="billetera">Billeteras virtuales</option>
+                  <option value="efectivo">Efectivo</option>
+                </select>
+                <p id="cfPagoHint" class="cf-hint">
+                  Aceptamos billeteras virtuales y efectivo.
+                </p>
+              </div>
+
+              <div class="cf-span-2" aria-live="polite">
+                <div class="cf-info" data-envio-panel="agente" hidden>
+                  <p>
+                    <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                    <span><strong>Envíos dentro de Tucumán capital en el día:</strong> consultá con un
+                      agente.</span>
+                  </p>
+                  <a data-cf-wa
+                    href="https://wa.me/543814963423?text=Hola!%20Quiero%20consultar%20por%20un%20env%C3%ADo%20en%20el%20d%C3%ADa%20dentro%20de%20Tucum%C3%A1n%20capital."
+                    target="_blank" rel="noopener noreferrer" class="cf-wa">
+                    <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                    Consultar con un agente
+                  </a>
+                </div>
+                <div class="cf-info" data-envio-panel="cotizar" hidden>
+                  <p>
+                    <i class="fa-solid fa-truck-fast" aria-hidden="true"></i>
+                    <span id="cfCotizarTexto">Solicitá tu cotización inmediata por WhatsApp.</span>
+                  </p>
+                  <a data-cf-wa href="https://wa.me/543814963423?text=Hola!%20Quiero%20cotizar%20un%20env%C3%ADo."
+                    target="_blank" rel="noopener noreferrer" class="cf-wa">
+                    <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                    Cotizar envío por WhatsApp
+                  </a>
+                </div>
+              </div>
+
+              <!-- Mensaje -->
+              <div class="cf-field cf-span-2">
+                <label class="cf-label" for="cfMensaje"><span data-label-text>Mensaje o detalle del trámite</span>
+                  <span class="cf-req" data-req aria-hidden="true">*</span></label>
+                <textarea id="cfMensaje" name="mensaje" class="cf-input" rows="4" maxlength="1500"
+                  placeholder="Ej.: datos del acta, patente/dominio o trámite requerido"></textarea>
+              </div>
+
+              <!-- Privacidad -->
+              <div class="cf-field cf-check cf-span-2">
+                <input id="cfPrivacidad" name="privacidad" type="checkbox" class="cf-checkbox" required />
+                <label for="cfPrivacidad">
+                  Acepto la
+                  <a href="imagenes/POLÍTICA DE PRIVACIDAD Y PROTECCIÓN DE DATOS PERSONALES.pdf" target="_blank"
+                    rel="noopener noreferrer">Política de Privacidad</a>
+                  y los
+                  <a href="imagenes/TÉRMINOS Y CONDICIONES DE CONTRATACIÓN DEL SERVICIO.pdf" target="_blank"
+                    rel="noopener noreferrer">Términos y Condiciones</a>,
+                  y autorizo el uso de mis datos para responder esta consulta.
+                  <span class="cf-req" aria-hidden="true">*</span>
+                </label>
+              </div>
+
+              <!-- Honeypot anti-spam: invisible para personas -->
+              <div class="cf-hp" aria-hidden="true">
+                <label for="cfWebsite">No completar este campo</label>
+                <input id="cfWebsite" name="website" type="text" tabindex="-1" autocomplete="off" />
+              </div>
+
+              <!-- Estado del envío -->
+              <div id="cfStatus" class="cf-status cf-span-2" role="status" aria-live="polite" tabindex="-1" hidden>
+              </div>
+              <p id="cfFallback" class="cf-fallback cf-span-2" hidden>
+                También podés escribirnos por
+                <a href="https://wa.me/543814963423?text=Hola!%20Quiero%20hacer%20una%20consulta%20sobre%20un%20tr%C3%A1mite."
+                  target="_blank" rel="noopener noreferrer">WhatsApp</a>
+                o a
+                <a href="mailto:gestoriaintegraltuc@gmail.com">gestoriaintegraltuc@gmail.com</a>.
+              </p>
+
+              <div class="cf-span-2">
+                <button id="cfSubmit" type="submit" class="cf-submit">
+                  <span data-label>Enviar consulta</span>
+                  <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+
+            <noscript>
+              <p class="cf-fallback">
+                Para usar este formulario necesitás activar JavaScript. Mientras
+                tanto, escribinos por WhatsApp al +54 3814 963423 o a
+                gestoriaintegraltuc@gmail.com.
+              </p>
+            </noscript>
+          </form>
+        </div>
+      </div>
+
 
       <div id="contacto" class="container mx-auto px-4 sm:px-6 md:px-8 py-10 md:py-16 max-w-6xl">
         <!-- Encabezado -->
@@ -887,6 +1099,9 @@
             </div>
           </div>
         </div>
+
+
+
       </div>
 
       <!-- Imagen visual + Redes Sociales -->
@@ -1046,8 +1261,8 @@
       <div class="footer-col">
         <h3>Boletín Informativo</h3>
         <p>Suscribite para recibir novedades y alertas de vencimientos.</p>
-        <form id="newsletterForm" class="newsletter-form">
-          <input id="newsletterEmail" type="email" name="email" placeholder="Correo Electrónico" required />
+        <form id="newsletterForm" class="newsletter-form" method="post">
+          <input id="newsletterEmail" type="email" name="email" placeholder="Correo Electrónico" maxlength="254" autocomplete="email" required />
           <button type="submit">Suscribirme</button>
         </form>
       </div>
@@ -1057,20 +1272,7 @@
     <div class="footer-bottom">
       <p>Copyright © 2026 Jorge Federico Díaz - Tucumán Argentina</p>
     </div>
-    <script>
-      function loadScript(a) {
-        var b = document.getElementsByTagName("head")[0],
-          c = document.createElement("script");
-        ((c.type = "text/javascript"),
-          (c.src = "https://tracker.metricool.com/resources/be.js"),
-          (c.onreadystatechange = a),
-          (c.onload = a),
-          b.appendChild(c));
-      }
-      loadScript(function () {
-        beTracker.t({ hash: "7edc12aa754357e21a6b7936b41f6427" });
-      });
-    </script>
+    <script src="metricool-init.js" defer></script>
   </footer>
   <script src="main.js" type="module"></script>
 </body>

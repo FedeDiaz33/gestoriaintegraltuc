@@ -992,3 +992,380 @@ main,
     gap: 1.5rem;
   }
 }
+
+
+/* ---------- Formulario de contacto (actas y presupuestos) ---------- */
+/* Los elementos con atributo [hidden] se ocultan siempre, aunque otra regla defina display */
+.cf-root [hidden] {
+  display: none !important;
+}
+
+.cf-card {
+  background: #ffffff;
+  border: 1px solid #f3f4f6;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .cf-card {
+    padding: 2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .cf-card {
+    padding: 2.5rem;
+  }
+}
+
+/* Cartel informativo */
+.cf-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: rgba(217, 164, 65, 0.14);
+  border: 1px solid rgba(217, 164, 65, 0.55);
+  border-left-width: 4px;
+  border-radius: 1rem;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1.5rem;
+  color: #111827;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.cf-notice i {
+  color: #92650f;
+  margin-top: 0.2rem;
+}
+
+/* Grilla: 1 columna en móvil, 2 desde 640px */
+.cf-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem 1.25rem;
+}
+
+.cf-span-2 {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 640px) {
+  .cf-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 480px) {
+  .cf-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Campos (misma línea visual que el cotizador) */
+.cf-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.cf-req {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.cf-input {
+  width: 100%;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #111827;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .cf-input {
+    font-size: 0.875rem;
+  }
+}
+
+.cf-input::placeholder {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.cf-input:focus {
+  border-color: #0c4a6e;
+  outline: none;
+}
+
+.cf-input:focus-visible {
+  outline: 2px solid #d9a441;
+  outline-offset: 2px;
+}
+
+.cf-input[aria-invalid="true"] {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+textarea.cf-input {
+  min-height: 7.5rem;
+  resize: vertical;
+}
+
+.cf-error {
+  margin-top: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #b91c1c;
+}
+
+.cf-hint {
+  margin-top: 0.375rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Bloque "Datos del acta" */
+.cf-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+}
+
+@media (min-width: 640px) {
+  .cf-fieldset {
+    padding: 1.25rem;
+  }
+}
+
+.cf-legend {
+  padding: 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0c4a6e;
+}
+
+/* Información adicional (details nativo, sin JS) */
+.cf-details {
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.75rem;
+}
+
+.cf-details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0c4a6e;
+  cursor: pointer;
+  list-style: none;
+}
+
+.cf-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.cf-details > summary::after {
+  content: "+";
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.cf-details[open] > summary::after {
+  content: "\2212";
+}
+
+.cf-details-body {
+  padding: 0 1rem 1rem;
+}
+
+/* Paneles de envío (cotización por WhatsApp / consulta con agente) */
+.cf-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 1rem;
+  padding: 0.875rem 1rem;
+  color: #0c4a6e;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.cf-info p {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+.cf-info p i {
+  margin-top: 0.2rem;
+}
+
+@media (min-width: 640px) {
+  .cf-info {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.cf-wa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  background: #047857;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.625rem 1.25rem;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+.cf-wa:hover {
+  background: #065f46;
+}
+
+/* Casilla de privacidad */
+.cf-check {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.75rem;
+  align-items: start;
+}
+
+.cf-check .cf-error {
+  grid-column: 1 / -1;
+}
+
+.cf-checkbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.15rem;
+  accent-color: #0c4a6e;
+}
+
+.cf-checkbox[aria-invalid="true"] {
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
+}
+
+.cf-check label {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #374151;
+}
+
+.cf-check label a {
+  color: #0c4a6e;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* Honeypot anti-spam (fuera de pantalla, no usar display:none) */
+.cf-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Mensajes de estado */
+.cf-status {
+  border: 1px solid;
+  border-radius: 1rem;
+  padding: 0.875rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.cf-status.is-ok {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+.cf-status.is-error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.cf-status:focus-visible {
+  outline: 2px solid #0c4a6e;
+  outline-offset: 2px;
+}
+
+.cf-fallback {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #374151;
+}
+
+.cf-fallback a {
+  color: #0c4a6e;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* Botón de envío */
+.cf-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  background: #d9a441;
+  color: #111827;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.875rem 1.5rem;
+  border: 0;
+  border-radius: 9999px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.cf-submit:hover:not(:disabled) {
+  background: #facc15;
+  transform: scale(1.02);
+}
+
+.cf-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (min-width: 640px) {
+  .cf-submit {
+    width: auto;
+    min-width: 14rem;
+  }
+}

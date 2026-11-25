@@ -1,0 +1,121 @@
+--- index.orig.html	2026-11-25 23:04:23.744891822 +0000
++++ index.html	2026-11-25 23:05:06.850067720 +0000
+@@ -11,35 +11,15 @@
+     patentamientos, trámites administrativos y actas. Gestión rápida, 
+     transparente y de confianza." />
+ 
+-  <!-- Google Tag Manager -->
+-  <script>
+-    (function (w, d, s, l, i) {
+-      w[l] = w[l] || [];
+-      w[l].push({
+-        "gtm.start": new Date().getTime(),
+-        event: "gtm.js",
+-      });
+-      var f = d.getElementsByTagName(s)[0],
+-        j = d.createElement(s),
+-        dl = l != "dataLayer" ? "&l=" + l : "";
+-      j.async = true;
+-      j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+-      f.parentNode.insertBefore(j, f);
+-    })(window, document, "script", "dataLayer", "GTM-PHHS7WM");
+-  </script>
+-
+   <!-- SEGURIDAD: Referrer Policy -->
+   <meta name="referrer" content="strict-origin-when-cross-origin" />
+ 
+-  <!-- SEGURIDAD: Content Security Policy (meta tag)-->
+-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 
+-    https://www.googletagmanager.com https://www.google-analytics.com; 
+-    style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com; 
+-    font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; 
+-    connect-src 'self' https://api.web3forms.com https://www.google-analytics.com https://region1.google-analytics.com 
+-    https://*.googletagmanager.com https://analytics.google.com; 
+-    img-src 'self' data: https://images.unsplash.com 
+-    https://*.googletagmanager.com https://*.google-analytics.com; object-src 'none'; base-uri 'self';" />
++  <!-- SEGURIDAD: CSP (meta). Debe coincidir con el header de Cloudflare (ver _headers),
++       que además lleva frame-ancestors porque esa directiva no funciona dentro de <meta>. -->
++  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://tracker.metricool.com; style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://api.web3forms.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://tracker.metricool.com; frame-src https://www.googletagmanager.com; form-action 'self'; base-uri 'self'; object-src 'none'" />
++
++  <!-- Analítica: GTM + gtag (antes eran scripts en línea; ahora archivo propio para cumplir la CSP) -->
++  <script src="analytics-init.js" defer></script>
+ 
+   <link rel="apple-touch-icon" href="imagenes/JD3.svg" sizes="180x180" />
+   <link rel="icon" href="imagenes/JD3.svg" type="image/svg+xml" sizes="32x32" />
+@@ -48,31 +28,21 @@
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+ 
+-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+-    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
++  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
++    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+     crossorigin="anonymous" referrerpolicy="no-referrer" />
+-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+   <!-- Tailwind compilado (build local, no CDN: ver tailwind.config.js). Reemplaza al Tailwind Play CDN. -->
+   <link href="./dist/output.css" rel="stylesheet" />
+   <link href="./styles.css" rel="stylesheet" />
+ 
+   <!-- Google tag (gtag.js) -->
+   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GWQKTPTSVN"></script>
+-  <script>
+-    window.dataLayer = window.dataLayer || [];
+-    function gtag() {
+-      dataLayer.push(arguments);
+-    }
+-    gtag("js", new Date());
+-
+-    gtag("config", "G-GWQKTPTSVN");
+-  </script>
+ </head>
+ 
+ <body class="bg-[#F7F5F0] text-gray-800 flex flex-col min-h-screen font-sans overflow-x-hidden">
+   <!-- Google Tag Manager (noscript) -->
+   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PHHS7WM" height="0" width="0"
+-      style="display: none; visibility: hidden"></iframe></noscript>
++      hidden></iframe></noscript>
+   <!-- End Google Tag Manager (noscript) -->
+ 
+   <!-- Agregamos la clase animate-bounce -->
+@@ -623,7 +593,7 @@
+                 </div>
+                 <select id="cotZona"
+                   class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base sm:text-sm font-medium text-dark focus:border-primary focus:outline-none transition-colors"></select>
+-                <input id="cotKm" type="number" min="0" step="1" inputmode="numeric" placeholder="Ej: 8"
++                <input id="cotKm" type="number" min="0" max="1000" step="1" inputmode="numeric" placeholder="Ej: 8"
+                   class="hidden w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base sm:text-sm font-medium text-dark focus:border-primary focus:outline-none transition-colors" />
+               </div>
+ 
+@@ -1291,8 +1261,8 @@
+       <div class="footer-col">
+         <h3>Boletín Informativo</h3>
+         <p>Suscribite para recibir novedades y alertas de vencimientos.</p>
+-        <form id="newsletterForm" class="newsletter-form">
+-          <input id="newsletterEmail" type="email" name="email" placeholder="Correo Electrónico" required />
++        <form id="newsletterForm" class="newsletter-form" method="post">
++          <input id="newsletterEmail" type="email" name="email" placeholder="Correo Electrónico" maxlength="254" autocomplete="email" required />
+           <button type="submit">Suscribirme</button>
+         </form>
+       </div>
+@@ -1302,20 +1272,7 @@
+     <div class="footer-bottom">
+       <p>Copyright © 2026 Jorge Federico Díaz - Tucumán Argentina</p>
+     </div>
+-    <script>
+-      function loadScript(a) {
+-        var b = document.getElementsByTagName("head")[0],
+-          c = document.createElement("script");
+-        ((c.type = "text/javascript"),
+-          (c.src = "https://tracker.metricool.com/resources/be.js"),
+-          (c.onreadystatechange = a),
+-          (c.onload = a),
+-          b.appendChild(c));
+-      }
+-      loadScript(function () {
+-        beTracker.t({ hash: "7edc12aa754357e21a6b7936b41f6427" });
+-      });
+-    </script>
++    <script src="metricool-init.js" defer></script>
+   </footer>
+   <script src="main.js" type="module"></script>
+ </body>
