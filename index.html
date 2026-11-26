@@ -16,7 +16,8 @@
 
   <!-- SEGURIDAD: CSP (meta). Debe coincidir con el header de Cloudflare (ver _headers),
        que además lleva frame-ancestors porque esa directiva no funciona dentro de <meta>. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://tracker.metricool.com; style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://api.web3forms.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://tracker.metricool.com; frame-src https://www.googletagmanager.com; form-action 'self'; base-uri 'self'; object-src 'none'" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://tracker.metricool.com https://challenges.cloudflare.com; style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://*.google-analytics.com https://*.googletagmanager.com https://www.google.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://tracker.metricool.com; connect-src 'self' https://api.web3forms.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.google.com https://stats.g.doubleclick.net https://tracker.metricool.com https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://challenges.cloudflare.com; form-action 'self'; base-uri 'self'; object-src 'none'" />
 
   <!-- Analítica: GTM + gtag (antes eran scripts en línea; ahora archivo propio para cumplir la CSP) -->
   <script src="analytics-init.js" defer></script>
@@ -34,7 +35,8 @@
   <!-- Tailwind compilado (build local, no CDN: ver tailwind.config.js). Reemplaza al Tailwind Play CDN. -->
   <link href="./dist/output.css" rel="stylesheet" />
   <link href="./styles.css" rel="stylesheet" />
-
+  <!-- Cloudflare Turnstile (captcha) -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GWQKTPTSVN"></script>
 </head>
@@ -969,6 +971,7 @@
               </p>
 
               <div class="cf-span-2">
+                <div class="cf-turnstile mb-4" data-sitekey="0x4AAAAAAGTOWGZxmHdgISA5" data-theme="light"></div>
                 <button id="cfSubmit" type="submit" class="cf-submit">
                   <span data-label>Enviar consulta</span>
                   <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
@@ -1262,7 +1265,8 @@
         <h3>Boletín Informativo</h3>
         <p>Suscribite para recibir novedades y alertas de vencimientos.</p>
         <form id="newsletterForm" class="newsletter-form" method="post">
-          <input id="newsletterEmail" type="email" name="email" placeholder="Correo Electrónico" maxlength="254" autocomplete="email" required />
+          <input id="newsletterEmail" type="email" name="email" placeholder="Correo Electrónico" maxlength="254"
+            autocomplete="email" required />
           <button type="submit">Suscribirme</button>
         </form>
       </div>

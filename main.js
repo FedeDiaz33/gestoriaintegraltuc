@@ -1021,6 +1021,7 @@ function initNewsletterForm() {
    - Sin eventos inline ni estilos inline (CSP): todo se maneja desde acá.
    - Todo texto que se muestra se inserta con textContent (nunca innerHTML),
      por lo que lo que escriba el usuario no puede inyectar HTML ni scripts. */
+
 const CONTACT_FORM = {
   endpoint: "https://api.web3forms.com/submit",
   accessKey: "bdcd4c2e-e9a4-48ae-bf60-7038aa31f1b5", // ← reemplazar (ver instrucciones)
@@ -1133,9 +1134,38 @@ function initContactForm() {
     return;
   }
 
+  const turnstileBox = form.querySelector(".cf-turnstile");
+
+  function getTurnstileToken() {
+    const input = form.querySelector('input[name="cf-turnstile-response"]');
+    if (input && typeof input.value === "string") {
+      return input.value.trim();
+    }
+    const fd = new FormData(form);
+    const val = fd.get("cf-turnstile-response");
+    return typeof val === "string" ? val.trim() : "";
+  }
+
+  function resetTurnstile() {
+    if (window.turnstile && typeof window.turnstile.reset === "function") {
+      try {
+        if (turnstileBox) {
+          window.turnstile.reset(turnstileBox);
+        } else {
+          window.turnstile.reset();
+        }
+      } catch {
+        try {
+          window.turnstile.reset();
+        } catch {
+          /* ignorar si el widget aún no está montado */
+        }
+      }
+    }
+  }
+
   /* ---------- Utilidades de saneamiento ---------- */
   const has = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
-  // Caracteres de control y de dirección de texto (bidi) que no deben viajar en el mail
   const CTRL = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g;
   const cleanLine = (v, max = 120) =>
     String(v ?? "").normalize("NFC").replace(CTRL, "").replace(/\s+/g, " ").trim().slice(0, max);
@@ -1162,7 +1192,6 @@ function initContactForm() {
   const formatFecha = (iso) => iso.split("-").reverse().join("/");
   const wordsOf = (s) => s.split(" ").filter((w) => w.length > 1);
 
-  // La fecha del acta no puede ser futura (se fija por JS, no con atributos inline)
   el.actaFecha.max = todayISO();
 
   /* ---------- Reglas de validación (una por campo, en el orden del DOM) ---------- */
@@ -1276,11 +1305,11 @@ function initContactForm() {
       p.className = "cf-error";
       wrap.appendChild(p);
     }
-    p.textContent = msg; // textContent: nunca innerHTML
+    p.textContent = msg;
     node.setAttribute("aria-invalid", "true");
     toggleToken(node, "aria-describedby", errId, true);
     const details = node.closest("details");
-    if (details) details.open = true; // que el error no quede escondido
+    if (details) details.open = true;
   }
 
   function validateField(key) {
@@ -1319,7 +1348,7 @@ function initContactForm() {
   function applyConsulta() {
     const isActa = el.consulta.value === "acta";
     el.acta.hidden = !isActa;
-    el.acta.disabled = !isActa; // un fieldset deshabilitado desactiva todos sus campos
+    el.acta.disabled = !isActa;
     if (!isActa) {
       ["actaTipo", "actaNombre", "actaLugar", "actaFecha", "dni", "numActa", "tomo", "folio", "anio", "rectificacion"].forEach(
         (k) => paintError(el[k], ""),
@@ -1344,7 +1373,6 @@ function initContactForm() {
     updateWhatsAppLinks();
   }
 
-  // Arma el mensaje de WhatsApp con los datos ya cargados (sin DNI ni datos registrales)
   function updateWhatsAppLinks() {
     if (!has(ENVIOS, el.envio.value)) return;
     const cfg = ENVIOS[el.envio.value];
@@ -1361,7 +1389,7 @@ function initContactForm() {
         lines.push(`${a.fecha}: ${formatFecha(el.actaFecha.value)}`);
     }
     const link = form.querySelector(`[data-envio-panel="${cfg.panel}"] a[data-cf-wa]`);
-    if (link) link.href = waLink(lines.join("\n")); // siempre https://wa.me/… con texto codificado
+    if (link) link.href = waLink(lines.join("\n"));
   }
 
   /* ---------- Estado del envío ---------- */
@@ -1370,7 +1398,7 @@ function initContactForm() {
     el.status.classList.toggle("is-ok", kind === "ok");
     el.status.classList.toggle("is-error", kind === "error");
     el.status.setAttribute("role", kind === "error" ? "alert" : "status");
-    el.status.textContent = msg; // textContent: escapa cualquier HTML
+    el.status.textContent = msg;
     el.fallback.hidden = !fallback;
     if (focus) el.status.focus();
   }
@@ -1393,7 +1421,7 @@ function initContactForm() {
   }
 
   /* ---------- Armado del mensaje que llega al mail ---------- */
-  function buildPayload() {
+function buildPayload() {
     const consulta = el.consulta.value;
     const contacto = cleanLine(el.contacto.value, 100);
     const p = {
@@ -1403,7 +1431,7 @@ function initContactForm() {
       "Nombre y apellido": cleanLine(el.nombre.value, 80),
       "Tipo de consulta": CONSULTAS[consulta],
     };
-    if (EMAIL_RE.test(contacto)) p.email = contacto; // Web3Forms lo usa como Reply-To
+    if (EMAIL_RE.test(contacto)) p.email = contacto;
     else p["Teléfono / WhatsApp"] = contacto;
 
     if (consulta === "acta") {
@@ -1435,6 +1463,8 @@ function initContactForm() {
     p["Consentimiento de privacidad"] = `Aceptado el ${new Date().toISOString()}`;
     return p;
   }
+
+
 
   async function sendPayload(payload) {
     const ctrl = new AbortController();
@@ -1486,7 +1516,6 @@ function initContactForm() {
     updateWhatsAppLinks();
   });
 
-  // Al salir de un campo con contenido se valida el formato (sin gritar por campos aún vacíos)
   form.addEventListener("focusout", (e) => {
     const t = e.target;
     const key = keyOf.get(t);
@@ -1502,6 +1531,7 @@ function initContactForm() {
     // Honeypot: un bot rellena el campo oculto; fingimos éxito y no enviamos nada
     if (el.website.value.trim() !== "") {
       form.reset();
+      resetTurnstile();
       resetUi();
       showStatus("ok", "¡Gracias! Recibimos tu consulta.", { focus: false });
       return;
@@ -1517,6 +1547,19 @@ function initContactForm() {
         { focus: false },
       );
       first.focus();
+      return;
+    }
+
+    // Validación de Cloudflare Turnstile antes de enviar
+    const turnstileToken = getTurnstileToken();
+    if (!turnstileToken) {
+      showStatus(
+        "error",
+        "Completá la verificación de seguridad de Cloudflare antes de enviar.",
+      );
+      if (turnstileBox) {
+        turnstileBox.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
       return;
     }
 
@@ -1540,12 +1583,14 @@ function initContactForm() {
     setSending(false);
 
     if (!ok) {
+      resetTurnstile();
       showStatus("error", failMsg, { fallback: true });
       return;
     }
 
     lastSentAt = Date.now();
     form.reset();
+    resetTurnstile();
     resetUi();
     showStatus(
       "ok",
