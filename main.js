@@ -13,7 +13,14 @@ const waLink = (msg) =>
    Todo dato interpolado en una plantilla que termina en innerHTML pasa por esc().
    Hoy los datos son constantes de este archivo; esto protege el día que vengan de
    un JSON, un CMS, la URL o una API. Las URLs externas pasan por safeUrl(). */
-const ESC_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;" };
+const ESC_MAP = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+  "`": "&#96;",
+};
 const esc = (v) => String(v ?? "").replace(/[&<>"'`]/g, (c) => ESC_MAP[c]);
 const safeUrl = (u) => {
   if (u === "#") return "#";
@@ -104,12 +111,18 @@ function initCotizador() {
   function initSelects() {
     // Servicios
     cotServicio.innerHTML = Object.entries(CONFIG.servicios)
-      .map(([key, item]) => `<option value="${esc(key)}">${esc(item.label)}</option>`)
+      .map(
+        ([key, item]) =>
+          `<option value="${esc(key)}">${esc(item.label)}</option>`,
+      )
       .join("");
 
     // Zonas
     cotZona.innerHTML = Object.entries(CONFIG.zonas)
-      .map(([key, item]) => `<option value="${esc(key)}">${esc(item.label)}</option>`)
+      .map(
+        ([key, item]) =>
+          `<option value="${esc(key)}">${esc(item.label)}</option>`,
+      )
       .join("");
 
     // Opciones de Espera
@@ -122,7 +135,10 @@ function initCotizador() {
 
     // Adicionales
     cotAdicional.innerHTML = Object.entries(CONFIG.adicionales)
-      .map(([key, item]) => `<option value="${esc(key)}">${esc(item.label)}</option>`)
+      .map(
+        ([key, item]) =>
+          `<option value="${esc(key)}">${esc(item.label)}</option>`,
+      )
       .join("");
 
     // Urgencia (Botones interactivos)
@@ -144,14 +160,20 @@ function initCotizador() {
   // 5. Cálculo y actualización de la vista
   function calcularCotizacion() {
     const servicioKey = cotServicio.value;
-    const servicioObj = own(CONFIG.servicios, servicioKey, { base: 0, label: "" });
+    const servicioObj = own(CONFIG.servicios, servicioKey, {
+      base: 0,
+      label: "",
+    });
 
     // Distancia
     let costoDistancia = 0;
     let labelDistancia = "";
 
     if (modoDistancia === "zona") {
-      const zonaObj = own(CONFIG.zonas, cotZona.value, { recargo: 0, label: "" });
+      const zonaObj = own(CONFIG.zonas, cotZona.value, {
+        recargo: 0,
+        label: "",
+      });
       costoDistancia = zonaObj.recargo;
       labelDistancia = `Zona: ${zonaObj.label}`;
     } else {
@@ -841,7 +863,9 @@ function initNewsCarousel() {
     });
   }
 
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
 
   function play() {
     stop();
@@ -994,6 +1018,7 @@ document.addEventListener("DOMContentLoaded", () => {
    sitio no tiene backend propio, deriva la suscripción a WhatsApp en vez
    de dejar que el <form> haga un submit GET por defecto (que expondría
    el email en la URL). */
+
 function initNewsletterForm() {
   const form = document.getElementById("newsletterForm");
   if (!form) return;
@@ -1011,7 +1036,6 @@ function initNewsletterForm() {
     form.reset();
   });
 }
-
 
 /* ============ 11. FORMULARIO DE CONTACTO (actas y presupuestos) ============
    - Envío con fetch (JSON) a Web3Forms, que reenvía a gestoriaintegraltuc@gmail.com.
@@ -1033,6 +1057,10 @@ const CONTACT_FORM = {
 const CONSULTAS = {
   acta: "Pedido de acta",
   presupuesto: "Solicitud de presupuesto",
+  informedominio: "Informes de dominio automotor",
+  informeinmueble: "Informes inmuebles Tucumán",
+  informeinfracciones: "Informes de infracciones de tránsito",
+  revisionpapeles: "Revisión de papeles online",
   otro: "Otro trámite",
 };
 
@@ -1075,7 +1103,7 @@ const RECTIFICACIONES = {
 
 const PAGOS = {
   billetera: "Billeteras virtuales",
-  efectivo: "Efectivo",
+  efectivo: "Western Union",
 };
 
 // panel: bloque que se muestra bajo el selector de envío
@@ -1083,12 +1111,14 @@ const ENVIOS = {
   capital: {
     label: "Dentro de Tucumán capital (en el día)",
     panel: "agente",
-    intro: "Hola! Quiero consultar por un envío en el día dentro de Tucumán capital.",
+    intro:
+      "Hola! Quiero consultar por un envío en el día dentro de Tucumán capital.",
   },
   pais: {
     label: "Dentro del país",
     panel: "cotizar",
-    texto: "Envío dentro del país: solicitá tu cotización inmediata por WhatsApp.",
+    texto:
+      "Envío dentro del país: solicitá tu cotización inmediata por WhatsApp.",
     intro: "Hola! Quiero cotizar un envío dentro del país.",
   },
   exterior: {
@@ -1113,6 +1143,14 @@ function initContactForm() {
     actaNombre: $("cfActaNombre"),
     actaLugar: $("cfActaLugar"),
     actaFecha: $("cfActaFecha"),
+    dominio: $("cfDominio"),
+    dominioPatente: $("cfDominioPatente"),
+    inmueble: $("cfInmueble"),
+    inmuebleMatricula: $("cfInmuebleMatricula"),
+    infracciones: $("cfInfracciones"),
+    infraccionPatente: $("cfInfraccionPatente"),
+    revision: $("cfRevision"),
+    revisionWa: $("cfRevisionWa"),
     dni: $("cfDni"),
     numActa: $("cfNumActa"),
     tomo: $("cfTomo"),
@@ -1166,9 +1204,15 @@ function initContactForm() {
 
   /* ---------- Utilidades de saneamiento ---------- */
   const has = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
-  const CTRL = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g;
+  const CTRL =
+    /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g;
   const cleanLine = (v, max = 120) =>
-    String(v ?? "").normalize("NFC").replace(CTRL, "").replace(/\s+/g, " ").trim().slice(0, max);
+    String(v ?? "")
+      .normalize("NFC")
+      .replace(CTRL, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, max);
   const cleanText = (v, max = 1500) =>
     String(v ?? "")
       .normalize("NFC")
@@ -1183,6 +1227,13 @@ function initContactForm() {
   const NAME_RE = /^[\p{L}\p{M}][\p{L}\p{M}'’.,&\/\- ]*$/u;
   const PLACE_RE = /^[\p{L}\p{N}\p{M}][\p{L}\p{N}\p{M}'’.,()\/\- ]*$/u;
   const REF_RE = /^[\p{L}\p{N}][\p{L}\p{N}\p{M}.\/\- ]{0,19}$/u;
+  // Patente AR (ABC123, AB123CD, 123ABC, A123BCD): 6-7 caracteres con letras y números
+  const PATENTE_RE = /^(?=.*\d)(?=.*[A-Z])[A-Z0-9]{6,7}$/;
+  // Matrícula de inmueble: texto libre corto que incluya al menos un número
+  const MATRICULA_RE =
+    /^(?=.*\p{N})[\p{L}\p{N}][\p{L}\p{N}\p{M}.\/\- º°]{2,39}$/u;
+  const normPatente = (v) =>
+    cleanLine(v, 12).replace(/[\s-]/g, "").toUpperCase();
 
   const pad = (n) => String(n).padStart(2, "0");
   const todayISO = () => {
@@ -1208,17 +1259,23 @@ function initContactForm() {
     },
     contacto: (n) => {
       const s = cleanLine(n.value, 100);
-      if (!s) return "Dejanos un correo o un teléfono/WhatsApp para responderte.";
+      if (!s)
+        return "Dejanos un correo o un teléfono/WhatsApp para responderte.";
       if (s.includes("@"))
-        return EMAIL_RE.test(s) ? "" : "El correo no parece válido. Ejemplo: nombre@correo.com";
+        return EMAIL_RE.test(s)
+          ? ""
+          : "El correo no parece válido. Ejemplo: nombre@correo.com";
       const digits = s.replace(/[\s().\-+]/g, "");
       return /^\d{8,15}$/.test(digits)
         ? ""
         : "Ingresá un teléfono válido con código de área, por ejemplo 381 4123456.";
     },
-    consulta: (n) => (has(CONSULTAS, n.value) ? "" : "Elegí el tipo de consulta."),
+    consulta: (n) =>
+      has(CONSULTAS, n.value) ? "" : "Elegí el tipo de consulta.",
     actaTipo: (n) =>
-      n.value && has(ACTAS, n.value) ? "" : "Elegí el tipo de acta que necesitás.",
+      n.value && has(ACTAS, n.value)
+        ? ""
+        : "Elegí el tipo de acta que necesitás.",
     actaNombre: (n) => {
       const s = cleanLine(n.value, 120);
       if (!s) return "Ingresá el nombre completo tal como figura en el acta.";
@@ -1228,60 +1285,103 @@ function initContactForm() {
     },
     actaLugar: (n) => {
       const s = cleanLine(n.value, 100);
-      if (!s) return "Ingresá el lugar exacto (ciudad o localidad y provincia).";
-      return s.length >= 2 && PLACE_RE.test(s) ? "" : "El lugar contiene caracteres no válidos.";
+      if (!s)
+        return "Ingresá el lugar exacto (ciudad o localidad y provincia).";
+      return s.length >= 2 && PLACE_RE.test(s)
+        ? ""
+        : "El lugar contiene caracteres no válidos.";
     },
     actaFecha: (n) => {
       const v = n.value;
       if (!v) return "Ingresá la fecha exacta (día, mes y año).";
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(v))) return "La fecha no es válida.";
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(v)))
+        return "La fecha no es válida.";
       if (v < "1850-01-01") return "La fecha no puede ser anterior a 1850.";
       if (v > todayISO()) return "La fecha no puede ser futura.";
       return "";
     },
     dni: (n) => {
       const d = n.value.replace(/[.\s]/g, "");
-      return !d || /^\d{7,8}$/.test(d) ? "" : "El DNI debe tener 7 u 8 números, sin puntos.";
+      return !d || /^\d{7,8}$/.test(d)
+        ? ""
+        : "El DNI debe tener 7 u 8 números, sin puntos.";
     },
     numActa: (n) => {
       const s = cleanLine(n.value, 20);
-      return !s || REF_RE.test(s) ? "" : "Usá solo letras, números, guion o barra (máx. 20).";
+      return !s || REF_RE.test(s)
+        ? ""
+        : "Usá solo letras, números, guion o barra (máx. 20).";
     },
     tomo: (n) => {
       const s = cleanLine(n.value, 20);
-      return !s || REF_RE.test(s) ? "" : "Usá solo letras, números, guion o barra (máx. 20).";
+      return !s || REF_RE.test(s)
+        ? ""
+        : "Usá solo letras, números, guion o barra (máx. 20).";
     },
     folio: (n) => {
       const s = cleanLine(n.value, 20);
-      return !s || REF_RE.test(s) ? "" : "Usá solo letras, números, guion o barra (máx. 20).";
+      return !s || REF_RE.test(s)
+        ? ""
+        : "Usá solo letras, números, guion o barra (máx. 20).";
     },
     anio: (n) => {
       const s = cleanLine(n.value, 4);
       if (!s) return "";
       const max = new Date().getFullYear();
-      if (!/^\d{4}$/.test(s) || +s < 1850 || +s > max) return `Ingresá un año entre 1850 y ${max}.`;
+      if (!/^\d{4}$/.test(s) || +s < 1850 || +s > max)
+        return `Ingresá un año entre 1850 y ${max}.`;
       return "";
     },
     rectificacion: optionalEnum(RECTIFICACIONES),
+    dominioPatente: (n) => {
+      const s = normPatente(n.value);
+      if (!s)
+        return "Ingresá la patente del vehículo para el informe de dominio.";
+      return PATENTE_RE.test(s)
+        ? ""
+        : "La patente no parece válida. Ejemplos: ABC123 o AB123CD.";
+    },
+    inmuebleMatricula: (n) => {
+      const s = cleanLine(n.value, 40);
+      if (!s) return "Ingresá la matrícula del inmueble.";
+      return MATRICULA_RE.test(s)
+        ? ""
+        : "La matrícula no parece válida: usá letras, números, guion o barra e incluí al menos un número.";
+    },
+    infraccionPatente: (n) => {
+      const s = normPatente(n.value);
+      if (!s)
+        return "Ingresá el número de patente para consultar las infracciones.";
+      return PATENTE_RE.test(s)
+        ? ""
+        : "La patente no parece válida. Ejemplos: ABC123 o AB123CD.";
+    },
     envio: optionalEnum(ENVIOS),
     pago: optionalEnum(PAGOS),
     mensaje: (n) => {
       if (!n.required) return "";
       const s = cleanText(n.value, 1500);
       if (!s) return "Contanos qué trámite necesitás.";
-      return s.length >= 10 ? "" : "Contanos un poco más: escribí al menos 10 caracteres.";
+      return s.length >= 10
+        ? ""
+        : "Contanos un poco más: escribí al menos 10 caracteres.";
     },
     privacidad: (n) =>
-      n.checked ? "" : "Para enviar la consulta tenés que aceptar la política de privacidad.",
+      n.checked
+        ? ""
+        : "Para enviar la consulta tenés que aceptar la política de privacidad.",
   };
   const FIELD_KEYS = Object.keys(rules);
   const keyOf = new Map(FIELD_KEYS.map((k) => [el[k], k]));
 
   /* ---------- Mostrar / limpiar errores (accesible) ---------- */
-  const isActive = (node) => !node.disabled && !node.closest("fieldset[disabled], [hidden]");
+  const isActive = (node) =>
+    !node.disabled && !node.closest("fieldset[disabled], [hidden]");
 
   function toggleToken(node, attr, token, on) {
-    const set = new Set((node.getAttribute(attr) || "").split(/\s+/).filter(Boolean));
+    const set = new Set(
+      (node.getAttribute(attr) || "").split(/\s+/).filter(Boolean),
+    );
     if (on) set.add(token);
     else set.delete(token);
     if (set.size) node.setAttribute(attr, [...set].join(" "));
@@ -1333,12 +1433,16 @@ function initContactForm() {
 
   /* ---------- UI dinámica ---------- */
   function setLabel(node, text) {
-    const span = form.querySelector(`label[for="${node.id}"] [data-label-text]`);
+    const span = form.querySelector(
+      `label[for="${node.id}"] [data-label-text]`,
+    );
     if (span) span.textContent = text;
   }
 
   function applyActaTexts() {
-    const t = has(ACTAS, el.actaTipo.value) ? ACTAS[el.actaTipo.value] : ACTAS[""];
+    const t = has(ACTAS, el.actaTipo.value)
+      ? ACTAS[el.actaTipo.value]
+      : ACTAS[""];
     setLabel(el.actaNombre, t.nombre);
     setLabel(el.actaLugar, t.lugar);
     setLabel(el.actaFecha, t.fecha);
@@ -1346,22 +1450,70 @@ function initContactForm() {
   }
 
   function applyConsulta() {
-    const isActa = el.consulta.value === "acta";
+    const v = el.consulta.value;
+    const isActa = v === "acta";
     el.acta.hidden = !isActa;
     el.acta.disabled = !isActa;
     if (!isActa) {
-      ["actaTipo", "actaNombre", "actaLugar", "actaFecha", "dni", "numActa", "tomo", "folio", "anio", "rectificacion"].forEach(
-        (k) => paintError(el[k], ""),
-      );
+      [
+        "actaTipo",
+        "actaNombre",
+        "actaLugar",
+        "actaFecha",
+        "dni",
+        "numActa",
+        "tomo",
+        "folio",
+        "anio",
+        "rectificacion",
+      ].forEach((k) => paintError(el[k], ""));
     }
-    el.mensaje.required = !isActa;
-    setLabel(el.mensaje, isActa ? "Información adicional (opcional)" : "Mensaje o detalle del trámite");
+
+    // Servicios con campo específico: se muestran/habilitan solo si corresponden
+    [
+      ["dominio", "dominioPatente", v === "informedominio"],
+      ["inmueble", "inmuebleMatricula", v === "informeinmueble"],
+      ["infracciones", "infraccionPatente", v === "informeinfracciones"],
+    ].forEach(([box, field, on]) => {
+      el[box].hidden = !on;
+      el[box].disabled = !on;
+      if (!on) {
+        el[field].value = "";
+        paintError(el[field], "");
+      }
+    });
+    el.revision.hidden = v !== "revisionpapeles";
+
+    // El mensaje es opcional cuando ya se piden datos específicos (acta o informes)
+    const msgOpcional =
+      isActa ||
+      v === "informedominio" ||
+      v === "informeinmueble" ||
+      v === "informeinfracciones";
+    el.mensaje.required = !msgOpcional;
+    setLabel(
+      el.mensaje,
+      msgOpcional
+        ? "Información adicional (opcional)"
+        : "Mensaje o detalle del trámite",
+    );
     const star = form.querySelector("[data-req]");
-    if (star) star.hidden = isActa;
+    if (star) star.hidden = msgOpcional;
     el.mensaje.placeholder = isActa
       ? "Ej.: para qué trámite necesitás el acta, urgencia, otros datos útiles"
-      : "Ej.: datos del acta, patente/dominio o trámite requerido";
+      : msgOpcional
+        ? "Ej.: motivo del informe u otros datos útiles"
+        : "Ej.: datos del acta, patente/dominio o trámite requerido";
     if (!el.mensaje.required) paintError(el.mensaje, "");
+    updateRevisionLink();
+  }
+
+  function updateRevisionLink() {
+    if (el.consulta.value !== "revisionpapeles") return;
+    const lines = ["Hola! Quiero hacer una revisión de papeles online."];
+    const nombre = cleanLine(el.nombre.value, 80);
+    if (nombre) lines.push(`Nombre: ${nombre}`);
+    el.revisionWa.href = waLink(lines.join("\n"));
   }
 
   function applyEnvio() {
@@ -1374,13 +1526,19 @@ function initContactForm() {
   }
 
   function updateWhatsAppLinks() {
+    updateRevisionLink();
     if (!has(ENVIOS, el.envio.value)) return;
     const cfg = ENVIOS[el.envio.value];
     const lines = [cfg.intro];
     const nombre = cleanLine(el.nombre.value, 80);
     if (nombre) lines.push(`Nombre: ${nombre}`);
-    if (has(CONSULTAS, el.consulta.value)) lines.push(`Consulta: ${CONSULTAS[el.consulta.value]}`);
-    if (el.consulta.value === "acta" && el.actaTipo.value && has(ACTAS, el.actaTipo.value)) {
+    if (has(CONSULTAS, el.consulta.value))
+      lines.push(`Consulta: ${CONSULTAS[el.consulta.value]}`);
+    if (
+      el.consulta.value === "acta" &&
+      el.actaTipo.value &&
+      has(ACTAS, el.actaTipo.value)
+    ) {
       const a = ACTAS[el.actaTipo.value];
       lines.push(`Acta: ${a.titulo}`);
       const lugar = cleanLine(el.actaLugar.value, 100);
@@ -1388,7 +1546,9 @@ function initContactForm() {
       if (el.actaFecha.value && !rules.actaFecha(el.actaFecha))
         lines.push(`${a.fecha}: ${formatFecha(el.actaFecha.value)}`);
     }
-    const link = form.querySelector(`[data-envio-panel="${cfg.panel}"] a[data-cf-wa]`);
+    const link = form.querySelector(
+      `[data-envio-panel="${cfg.panel}"] a[data-cf-wa]`,
+    );
     if (link) link.href = waLink(lines.join("\n"));
   }
 
@@ -1417,11 +1577,12 @@ function initContactForm() {
     sending = on;
     el.submit.disabled = on;
     el.submit.setAttribute("aria-busy", String(on));
-    if (submitLabel) submitLabel.textContent = on ? "Enviando…" : "Enviar consulta";
+    if (submitLabel)
+      submitLabel.textContent = on ? "Enviando…" : "Enviar consulta";
   }
 
   /* ---------- Armado del mensaje que llega al mail ---------- */
-function buildPayload() {
+  function buildPayload() {
     const consulta = el.consulta.value;
     const contacto = cleanLine(el.contacto.value, 100);
     const p = {
@@ -1456,15 +1617,24 @@ function buildPayload() {
         p["Rectificación / oficio"] = RECTIFICACIONES[el.rectificacion.value];
     }
 
-    if (has(ENVIOS, el.envio.value)) p["Tipo de envío"] = ENVIOS[el.envio.value].label;
+    if (consulta === "informedominio")
+      p["Patente del vehículo"] = normPatente(el.dominioPatente.value);
+    if (consulta === "informeinmueble")
+      p["Matrícula del inmueble"] = cleanLine(el.inmuebleMatricula.value, 40);
+    if (consulta === "informeinfracciones")
+      p["Patente (infracciones de tránsito)"] = normPatente(
+        el.infraccionPatente.value,
+      );
+
+    if (has(ENVIOS, el.envio.value))
+      p["Tipo de envío"] = ENVIOS[el.envio.value].label;
     if (has(PAGOS, el.pago.value)) p["Forma de pago"] = PAGOS[el.pago.value];
     const mensaje = cleanText(el.mensaje.value, 1500);
     if (mensaje) p["Mensaje"] = mensaje;
-    p["Consentimiento de privacidad"] = `Aceptado el ${new Date().toISOString()}`;
+    p["Consentimiento de privacidad"] =
+      `Aceptado el ${new Date().toISOString()}`;
     return p;
   }
-
-
 
   async function sendPayload(payload) {
     const ctrl = new AbortController();
@@ -1472,7 +1642,10 @@ function buildPayload() {
     try {
       const res = await fetch(CONTACT_FORM.endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify(payload),
         signal: ctrl.signal,
         credentials: "omit",
@@ -1520,7 +1693,8 @@ function buildPayload() {
     const t = e.target;
     const key = keyOf.get(t);
     if (!key || t.type === "checkbox") return;
-    if (t.value || t.getAttribute("aria-invalid") === "true") validateField(key);
+    if (t.value || t.getAttribute("aria-invalid") === "true")
+      validateField(key);
   });
 
   form.addEventListener("submit", async (e) => {
@@ -1564,7 +1738,10 @@ function buildPayload() {
     }
 
     if (Date.now() - lastSentAt < CONTACT_FORM.cooldownMs) {
-      showStatus("error", "Ya enviamos tu consulta. Esperá unos segundos antes de enviar otra.");
+      showStatus(
+        "error",
+        "Ya enviamos tu consulta. Esperá unos segundos antes de enviar otra.",
+      );
       return;
     }
 
@@ -1572,7 +1749,9 @@ function buildPayload() {
       "No pudimos enviar tu consulta en este momento. Probá de nuevo en unos minutos o escribinos directamente.";
 
     if (!CONTACT_FORM.accessKey || CONTACT_FORM.accessKey.startsWith("TU_")) {
-      console.error("[contacto] Falta configurar CONTACT_FORM.accessKey en main.js.");
+      console.error(
+        "[contacto] Falta configurar CONTACT_FORM.accessKey en main.js.",
+      );
       showStatus("error", failMsg, { fallback: true });
       return;
     }
